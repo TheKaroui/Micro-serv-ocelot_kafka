@@ -1,0 +1,17 @@
+name: CI for V3
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build services and gateway
+        run: |
+          dotnet build src/customers/customers.csproj
+          dotnet build src/catalog/catalog.csproj
+          dotnet build src/orders/orders.csproj
+          dotnet build src/gateway/Gateway.csproj

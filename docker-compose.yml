@@ -1,0 +1,61 @@
+version: '3.8'
+services:
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - '2181:2181'
+  kafka:
+    image: bitnami/kafka:latest
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+    ports:
+      - '9092:9092'
+  customers:
+    build: ./src/customers
+    container_name: customers
+    ports:
+      - '6001:80'
+    depends_on:
+      - kafka
+      - zookeeper
+  catalog:
+    build: ./src/catalog
+    container_name: catalog
+    ports:
+      - '6002:80'
+    depends_on:
+      - kafka
+      - zookeeper
+  orders:
+    build: ./src/orders
+    container_name: orders
+    ports:
+      - '6003:80'
+    depends_on:
+      - kafka
+      - zookeeper
+  jaeger:
+    image: jaegertracing/all-in-one:1.41
+    ports:
+      - '6831:6831/udp'
+      - '16686:16686'
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - '9090:9090'
+
+  gateway:
+    build: ./src/gateway
+    container_name: gateway
+    ports:
+      - '7000:80'
+    depends_on:
+      - customers
+      - catalog
+      - orders
